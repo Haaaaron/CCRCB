@@ -1,0 +1,23 @@
+# Minimal config for analysis package validation
+# Sweeps across backends, math_per_load, and message size (volume)
+# Volume (Global) | Iters | Math_per_Load | Warmup | Repeats | Comm_Mask | Backend
+
+# Memory-bound (Math=1), Small message (64^3)
+(64,64,64,1)      200     1               10       5         (1,1,1,1,1,1,1,1)    MPI
+(64,64,64,1)      200     1               10       5         (1,1,1,1,1,1,1,1)    NCCL
+(64,64,64,1)      200     1               10       5         (1,1,1,1,1,1,1,1)    NVSHMEM
+
+# Compute-bound (Math=50), Small message (64^3)
+(64,64,64,1)      200     50              10       5         (1,1,1,1,1,1,1,1)    MPI
+(64,64,64,1)      200     50              10       5         (1,1,1,1,1,1,1,1)    NCCL
+(64,64,64,1)      200     50              10       5         (1,1,1,1,1,1,1,1)    NVSHMEM
+
+# Memory-bound (Math=1), Medium message (128^3)
+(128,128,128,1)   200     1               10       5         (1,1,1,1,1,1,1,1)    MPI
+(128,128,128,1)   200     1               10       5         (1,1,1,1,1,1,1,1)    NCCL
+(128,128,128,1)   200     1               10       5         (1,1,1,1,1,1,1,1)    NVSHMEM
+
+# Compute-bound (Math=50), Medium message (128^3)
+(128,128,128,1)   200     50              10       5         (1,1,1,1,1,1,1,1)    MPI
+(128,128,128,1)   200     50              10       5         (1,1,1,1,1,1,1,1)    NCCL
+(128,128,128,1)   200     50              10       5         (1,1,1,1,1,1,1,1)    NVSHMEM

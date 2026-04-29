@@ -1,0 +1,5 @@
+# Minimal config for profiling stability test
+# Volume (Global) | Iters | Math_per_Load | Warmup | Repeats | Comm_Mask | Backend
+(128,128,128,1)   200   1      10      1       (1,1,1,1,1,1,1,1)    MPI
+(128,128,128,1)   200   1      10      1       (1,1,1,1,1,1,1,1)    NCCL
+(128,128,128,1)   200   1      10      1       (1,1,1,1,1,1,1,1)    NVSHMEM

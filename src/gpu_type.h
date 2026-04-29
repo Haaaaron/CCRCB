@@ -15,6 +15,8 @@ using gpuError_t = hipError_t;
 #define gpuGetErrorString hipGetErrorString
 #else
 #include <cuda_runtime.h>
+#include <cuda_profiler_api.h>
+#include <nvtx3/nvToolsExt.h>
 using gpuError_t = cudaError_t;
 #define gpuSuccess cudaSuccess
 #define gpuGetErrorString cudaGetErrorString
@@ -59,7 +61,13 @@ inline void gpuAssert(gpuError_t code, const char *cmd, const char *file,
   GPU_CHECK(hipStreamCreateWithFlags(s, flags))
 #define gpuStreamDestroy(stream) GPU_CHECK(hipStreamDestroy(stream))
 #define gpuStreamSynchronize(stream) GPU_CHECK(hipStreamSynchronize(stream))
+#define gpuStreamWaitEvent(stream, event, flags)                               \
+  GPU_CHECK(hipStreamWaitEvent(stream, event, flags))
 #define gpuDeviceSynchronize() GPU_CHECK(hipDeviceSynchronize())
+
+#define gpuGetDeviceCount(count) GPU_CHECK(hipGetDeviceCount(count))
+#define gpuGetDeviceProperties(prop, dev) GPU_CHECK(hipGetDeviceProperties(prop, dev))
+#define gpuDeviceProp_t hipDeviceProp_t
 
 #define gpuEventCreate(event) GPU_CHECK(hipEventCreate(event))
 #define gpuEventRecord(event, stream) GPU_CHECK(hipEventRecord(event, stream))
@@ -69,6 +77,12 @@ inline void gpuAssert(gpuError_t code, const char *cmd, const char *file,
 inline void gpuEventElapsedTime(float *ms, gpuEvent_t start, gpuEvent_t stop) {
   GPU_CHECK(hipEventElapsedTime(ms, start, stop));
 }
+
+// Profiler stubs for HIP (can be extended if needed)
+inline void gpuProfilerStart() {}
+inline void gpuProfilerStop() {}
+inline void gpuRangePush(const char* label) {}
+inline void gpuRangePop() {}
 
 #else // CUDA
 #define gpuStream_t cudaStream_t
@@ -91,7 +105,13 @@ inline void gpuEventElapsedTime(float *ms, gpuEvent_t start, gpuEvent_t stop) {
   GPU_CHECK(cudaStreamCreateWithFlags(s, flags))
 #define gpuStreamDestroy(stream) GPU_CHECK(cudaStreamDestroy(stream))
 #define gpuStreamSynchronize(stream) GPU_CHECK(cudaStreamSynchronize(stream))
+#define gpuStreamWaitEvent(stream, event, flags)                               \
+  GPU_CHECK(cudaStreamWaitEvent(stream, event, flags))
 #define gpuDeviceSynchronize() GPU_CHECK(cudaDeviceSynchronize())
+
+#define gpuGetDeviceCount(count) GPU_CHECK(cudaGetDeviceCount(count))
+#define gpuGetDeviceProperties(prop, dev) GPU_CHECK(cudaGetDeviceProperties(prop, dev))
+#define gpuDeviceProp_t cudaDeviceProp
 
 #define gpuEventCreate(event) GPU_CHECK(cudaEventCreate(event))
 #define gpuEventRecord(event, stream) GPU_CHECK(cudaEventRecord(event, stream))
@@ -101,6 +121,13 @@ inline void gpuEventElapsedTime(float *ms, gpuEvent_t start, gpuEvent_t stop) {
 inline void gpuEventElapsedTime(float *ms, gpuEvent_t start, gpuEvent_t stop) {
   GPU_CHECK(cudaEventElapsedTime(ms, start, stop));
 }
+
+// Profiler / NVTX for CUDA
+inline void gpuProfilerStart() { cudaProfilerStart(); }
+inline void gpuProfilerStop() { cudaProfilerStop(); }
+inline void gpuRangePush(const char* label) { nvtxRangePushA(label); }
+inline void gpuRangePop() { nvtxRangePop(); }
+
 #endif
 
 namespace streams {

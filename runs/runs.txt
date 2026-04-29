@@ -1,0 +1,4 @@
+# Volume (Global) Iters  Math_per_Load  Warmup  Repeats  Mask                 Backend
+(256,256,256,1)   1000   1      100     10       (1,1,1,1,1,1,1,1)    MPI
+(256,256,256,1)   1000   1      100     10       (1,1,1,1,1,1,1,1)    NCCL
+(256,256,256,1)   1000   1      100     10       (1,1,1,1,1,1,1,1)    NVSHMEM

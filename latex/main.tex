@@ -1,0 +1,215 @@
+\documentclass[twocolumn, secnumarabic, amssymb, nobibnotes, aps, prd, amsmath, nofootinbib]{revtex4-2}
+
+\newcommand{\revtex}{REV\TeX\ }
+\newcommand{\classoption}[1]{\texttt{#1}}
+\newcommand{\macro}[1]{\texttt{\textbackslash#1}}
+\newcommand{\m}[1]{\macro{#1}}
+\newcommand{\env}[1]{\texttt{#1}}
+\setlength{\textheight}{9.5in}
+
+\renewcommand{\topfraction}{0.99}
+\renewcommand{\bottomfraction}{0.99}
+\renewcommand{\textfraction}{0}
+\setcounter{topnumber}{10}
+\setcounter{bottomnumber}{10}
+\setcounter{totalnumber}{10}
+
+\DeclareMathOperator{\Tr}{Tr}
+\DeclareMathOperator{\z}{\mathbf{z}}
+\newcommand{\id}{\mathbbm{1}}
+\newcommand{\cmark}{\ding{51}}%
+\newcommand{\xmark}{\ding{55}}%
+\newcommand{\SU}{\textrm{SU}}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newcommand{\bubble}{{\mathrm{b}}}
+\newcommand{\metastable}{{\mathrm{m}}}
+\newcommand{\stable}{{\mathrm{s}}}
+\newcommand{\muca}{{\mathrm{muca}}}
+\newcommand{\canonical}{{\mathrm{ca}}}
+\newcommand{\weighted}{w}
+
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{xprintlen}
+\usepackage{xcolor, algorithm2e}
+\usepackage{soul}
+\usepackage{mathtools}
+\usepackage{svg}
+\usepackage{subcaption}
+\usepackage{amsmath, amssymb,amsfonts,amssymb,amscd} % For better math
+\usepackage{bbm}
+\usepackage[mode=buildnew]{standalone}% requires -shell-escape
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\usepackage{listings}
+\usepackage{xcolor}
+
+\lstset{
+    language=C++,
+    basicstyle=\ttfamily\small,
+    keywordstyle=\color{blue}\bfseries,
+    stringstyle=\color{red},
+    commentstyle=\color{green!60!black},
+    numbers=left,
+    numberstyle=\tiny\color{gray},
+    stepnumber=1,
+    breaklines=true,
+    frame=single,
+    captionpos=b,
+    showstringspaces=false
+}
+\begin{document}
+
+\title{Resource contention in point to point overlapping GPU communication with MPI,NVSHMEM and NCCL}
+\author{Aaron Haarti}
+\email[]{aaron.haarti@helsinki.fi}
+
+\affiliation{Department of Physics and Helsinki Institute of Physics,\\ PL64, FI-00014 University of Helsinki, Finland}
+
+\date{Feb 2026}
+
+\begin{abstract}
+Concepts: P2P, NCCL, NVSHMEM, GPU-Aware MPI, Overlapping computation and communication
+\end{abstract}
+
+\maketitle
+
+\section{Introduction}\label{sect:introduction}
+
+It is well known that to accurately model resource contention, it is necessary to first define how standard communication libraries interface with the hardware. The architectural paradigms of MPI, NCCL, and NVSHMEM dictate their reliance on the GPU's Streaming Multiprocessors (SMs) and High-Bandwidth Memory (HBM), which fundamentally drives the contention profile. We evaluate the performance impact of overlapping computation and communication by defining the execution models of these libraries.
+
+In Sec. \ref{sect:contention-analysis} we will introduce the mathematical resource contention analysis and the degradation factors. In Sec. \ref{sect:methodology} we will describe the methodology for simulating and measuring resource contention. In Sec. \ref{sect:measurements} we present measurement results. Finally, we conclude in Sec. \ref{sect:conclusions}.
+
+\subsection{Communication Library Execution Models}
+
+We specifically investigate the resource contention profiles of point-to-point (P2P) communication primitives. This focus on P2P operations provides a high-resolution view of the underlying hardware, allowing us to precisely isolate and quantify the fundamental bottlenecks between compute kernels and the interconnect at their most granular level.
+
+\subsubsection{GPU-Aware MPI}
+Modern implementations of the Message Passing Interface (MPI), such as MVAPICH2-GDR or OpenMPI, utilize Unified Virtual Addressing (UVA) and GPUDirect RDMA \cite{potluri2013mvapich2, nvidia_gpudirect}. In this host-initiated paradigm, the CPU orchestrates P2P operations like \texttt{MPI\_Send} or \texttt{MPI\_Recv}. The Network Interface Card (NIC) accesses the GPU's HBM directly via the PCIe switch, entirely bypassing the GPU's SMs. Because the SMs are not involved in data staging or transmission, this model inherently isolates compute resources from communication traffic \cite{chu2020exploiting}.
+
+\subsubsection{NVIDIA NCCL}
+While primarily recognized for producing highly optimized collective communications (e.g., \texttt{ncclAllReduce}), the NVIDIA Collective Communication Library (NCCL) also provides a robust P2P API (\texttt{ncclSend} and \texttt{ncclRecv}), which is the main focus of our study. NCCL operates on a host-initiated, kernel-executed model \cite{nvidia_nccl_doc}. According to NCCL architecture documentation, communication is managed by mapping thread blocks to SMs, referred to as "Channels." Both P2P and collective routines employ a copy-based pipeline: the SMs actively copy data from the user buffer into internal FIFO staging buffers in the HBM, perform any necessary mathematical reductions (for collectives), and then transmit the chunks to the NIC \cite{meta2025ncclx, unat2024landscape}. This approach requires active SM cycles and effectively doubles the HBM bandwidth requirement for a given payload \cite{agrawal2024optimizing}. We note that empirically, NCCL typically consumes between 4 to 24 SMs depending on the number of initialized parallel channels, a footprint that can be manually constrained via the \texttt{NCCL\_MAX\_CTAS} environment variable \cite{nvidia_nccl_env}. Even if SMs are artificially constrained, the heavily memory-intensive nature of the internal staging kernels means that overlapping NCCL P2P transfers with dense compute kernels (e.g., GEMMs) frequently results in severe HBM bandwidth starvation. We observe that this contention can drop the Model Flops Utilization (MFU) of the compute kernel dramatically (e.g., from 80\% down to 50\%) entirely due to memory contention rather than SM starvation \cite{lee2025characterizing}.
+
+\subsubsection{NVIDIA NVSHMEM}
+NVSHMEM implements a Partitioned Global Address Space (PGAS) designed for high-performance point-to-point memory access \cite{nvidia_nvshmem_doc}. While it supports device-initiated communication invoked directly from within the CUDA compute kernel, our study focuses on its host-orchestrated, stream-enqueued P2P APIs (e.g., \texttt{nvshmemx\_putmem\_nbi\_on\_stream}). Unlike MPI or NCCL, the GPU threads directly calculate destination addresses and ring the network doorbell to trigger the NIC \cite{unat2024landscape}. While this eliminates CPU orchestration overhead and delivers ultra-low latency for fine-grained messages, it requires the SMs to actively spend cycles issuing network requests rather than performing arithmetic computation \cite{hwang2023ark}. The exact SM involvement strictly depends on the transport layer: over intra-node NVLink, SMs perform active load/store instructions (high SM involvement); over InfiniBand (IBGDA), SMs simply write Work Queue Elements (WQEs) to the NIC (lower SM footprint); and on newer architectures like Hopper, the Tensor Memory Accelerator (TMA) handles the transfer autonomously, dropping SM involvement to near-zero \cite{nvidia_hopper_tma}. We compute that despite variable SM usage, stream-enqueued \texttt{put} operations actively read data from the local HBM to send it. NVLink IPC transfers, for instance, can reach $\sim$75--80\% of the theoretical peak bandwidth, heavily saturating the shared HBM read ports. Consequently, overlapping NVSHMEM P2P operations with memory-bound compute kernels still results in significant hardware contention \cite{nvidia_nvshmem_doc}.
+
+\section{Resource Contention Analysis} \label{sect:contention-analysis}
+
+We evaluate the performance impact of overlapping computation and communication. We use multiplicative degradation factors to model resource contention as a rate-limited process, which realistically reflects how hardware bottlenecks stretch task durations by throttling execution throughput.
+
+Let $E$ be the efficiency which measures the sequential execution time relative to the overlapped execution time. Let $T_S$ be the total sequential time, $T_K$ be the computation time, $T_C$ be the communication time, and $T_O$ be the total overlapping time:
+\begin{align*}
+    E &= \frac{T_K + T_C}{T_O} \\
+    T_K + T_C &\equiv T_S \implies E = \frac{T_S}{T_O}.
+\end{align*}
+
+We define the loss function due to resource contention, $L$, which accounts for the ratio between the theoretical perfectly overlapped time and the actual time including boundary computation $T_B$. Assuming boundary computation is zero ($T_{B} = 0$), we compute:
+\begin{align*}
+    L &= \frac{\max(T_K, T_C)}{T_O}.
+\end{align*}
+
+\textbf{Ideal:} In a perfect system without contention, the degradation factors are 1. The loss function evaluates to 1, and the total time is strictly the maximum of computation or communication.
+\begin{align*}
+    L &= 1 \implies E = \frac{T_K + T_C}{\max(T_K, T_C)}.
+\end{align*}
+
+\textbf{Contention:} When contention exists, it acts as a penalty factor that increases the total time of $T_K$ and $T_C$ individually. Let $a_{CL} \geq 1$ be the computation degradation factor and $b_{CL} \geq 1$ be the communication degradation factor. The total overlapping time $T_O$ becomes the maximum of these stretched times:
+\begin{align*}
+    T_O &= \max(T_K \cdot a_{CL}, T_C \cdot b_{CL}).
+\end{align*}
+The degradation factors $a_{CL}$ and $b_{CL}$ are influenced by resource contention between the concurrent communication and compute kernels, depending on the RDMA engine, bandwidth, arithmetic intensity, and message size.
+
+\subsection{Hardware-Dependent Formulation of Degradation Factors}
+
+We compute the degradation factors $a_{CL}$ and $b_{CL}$ to quantify the structural bottlenecking of the GPU's Streaming Multiprocessors (SM) and High-Bandwidth Memory (HBM). Let $C_{SM}$ and $C_{HBM}$ denote the total hardware capacities for compute and memory bandwidth, respectively.
+
+\subsubsection{Resource Demands}
+A compute kernel $K$ with a specific arithmetic intensity $A$ demands resources $(R_{SM}^K, R_{HBM}^K)$.
+
+A communication task $C$ handling message size $M$ demands resources $(R_{SM}^C, R_{HBM}^C)$. The magnitudes of $R_{SM}^C$ (software overhead and staging) and $R_{HBM}^C$ (physical DMA memory access) depend strictly on the transport mechanism utilized (e.g., copy-based versus zero-copy RDMA).
+
+\subsubsection{Computation Degradation ($a_{CL}$)}
+The computation degradation factor $a_{CL}$ is driven by SM thread starvation and HBM bandwidth saturation. We model it as the maximum resource congestion ratio:
+\begin{align*}
+    a_{CL} &= \max\left(1, \frac{R_{SM}^K + R_{SM}^C}{C_{SM}}, \frac{R_{HBM}^K + R_{HBM}^C}{C_{HBM}}\right).
+\end{align*}
+
+\textbf{Impact of RDMA:} When utilizing zero-copy RDMA (e.g., GPU-Aware MPI or NCCLX), the communication task bypasses the SMs, yielding $R_{SM}^C = 0$. If the compute kernel is compute-bound (high $A$, requiring high $R_{SM}^K$ but low $R_{HBM}^K$), bypassing the SM prevents contention, ensuring $a_{CL} \approx 1$. Conversely, if the communication uses a copy-based protocol (e.g., standard NCCL), $R_{SM}^C > 0$, forcing $a_{CL} > 1$.
+
+\subsubsection{Communication Degradation ($b_{CL}$)}
+The communication degradation factor $b_{CL}$ represents the stretching of the network transfer time due to HBM contention throttling the NIC's injection rate. We evaluate it as:
+\begin{align*}
+    b_{CL} &= \max\left(1, \frac{R_{HBM}^K + R_{HBM}^C}{C_{HBM}}\right).
+\end{align*}
+
+\textbf{Impact of Arithmetic Intensity:} If the overlapped compute kernel is memory-bound (low arithmetic intensity $A$), it demands massive HBM bandwidth ($R_{HBM}^K \to C_{HBM}$). This throttles the NIC's ability to fetch data via DMA from the GPU, forcing $b_{CL} > 1$ regardless of the RDMA engine's theoretical capacity.
+
+\section{Methodology: Simulating Resource Contention} \label{sect:methodology}
+
+To empirically measure the resource degradation factors—specifically the Streaming Multiprocessor contention ($a_{CL}$) and High-Bandwidth Memory contention ($b_{CL}$)—we develop a highly tunable benchmark kernel. This kernel acts as a synthetic stress test where the arithmetic intensity ($A$) can be dynamically modulated, enabling the precise isolation of SM and HBM bottlenecks during overlapping communication.
+
+\subsection{Modulating Arithmetic Intensity ($A$)}
+To produce varying arithmetic intensity, we introduce the \texttt{math\_per\_load} parameter, which dictates the ratio of mathematical operations executed by the SMs relative to the memory fetches executed by the memory controller.
+\begin{itemize}
+    \item \textbf{Memory-Bound Workloads:} A low \texttt{math\_per\_load} forces the kernel to fetch data from HBM on nearly every loop iteration. This maximizes the compute kernel's memory demand ($R_{HBM}^K$), stressing the memory bandwidth and allowing the measurement of $b_{CL}$ when overlapped with DMA traffic.
+    \item \textbf{Compute-Bound Workloads:} A high \texttt{math\_per\_load} executes hundreds of arithmetic instructions for every memory fetch. This maximizes SM demand ($R_{SM}^K$) while generating minimal memory traffic, allowing the measurement of $a_{CL}$ when overlapped with copy-based communication protocols.
+\end{itemize}
+
+\subsection{Simulating SM Contention}
+To ensure genuine SM utilization, we force the execution of a continuous chain of dependent Fused Multiply-Add (FMA) instructions in the kernel. Because the current value of the accumulator depends strictly on the immediate previous calculation, the compiler cannot unroll or optimize the loop away. This guarantees that the SMs are physically occupied for the specified number of iterations, creating a heavy compute footprint that will physically slow down if a communication operation attempts to steal SM cycles.
+
+\subsection{Simulating HBM Contention}
+To generate realistic memory pressure, we periodically read from neighboring lattice sites based on 4D grid strides. By jumping through memory using varying strides, we force cache misses and ensure that data is pulled directly from the physical HBM. This approach exposes the true hardware memory bottleneck when a concurrent RDMA transfer also accesses the HBM.
+
+\subsection{Compute Kernel Implementation}
+In Listing \ref{lst:compute_kernel} we detail the benchmark compute kernel. We structure the code to enforce dependent mathematical operations while conditionally triggering strided memory accesses based on the target arithmetic intensity.
+
+\begin{lstlisting}[language=C++, float=*t, caption={Benchmark compute kernel simulating arithmetic intensity and HBM contention.}, label={lst:compute_kernel}, basicstyle=\ttfamily\small, breaklines=true]
+template <typename T>
+__global__ void kernel_compute(T *d_bulk, const size_t *grid_size, size_t volume, 
+                               int iters, int math_per_load) {
+    size_t idx = blockIdx.x * (size_t)blockDim.x + threadIdx.x;
+    if (idx >= volume) return;
+
+    // Load grid dimensions into registers
+    size_t g0 = grid_size[0], g1 = grid_size[1], g2 = grid_size[2];
+    
+    // Initial load
+    T res = d_bulk[idx];
+    T factor = (T)1.000001;
+
+    // Strides to defeat simple contiguous caching
+    size_t s0 = 1, s1 = g0, s2 = g0 * g1, s3 = g0 * g1 * g2;
+    int load_count = 0;
+
+    // HEAVY COMPUTE & MEMORY LOOP
+    for (int i = 0; i < iters; ++i) {
+        // 1. Dependent FMA ensures continuous SM utilization
+        res = (res * factor) + (T)0.0123;
+        
+        if (res > 1e10 || res < -1e10) res *= 1e-10;
+
+        // 2. Modulated HBM fetches based on Arithmetic Intensity
+        int m_load = (math_per_load > 0) ? math_per_load : 1;
+        if (i % m_load == 0) {
+            size_t neighbor_idx;
+            int mode = load_count % 4;
+            
+            if (mode == 0) neighbor_idx = (idx + s0) % volume;
+            else if (mode == 1) neighbor_idx = (idx + s1) % volume;
+            else if (mode == 2) neighbor_idx = (idx + s2) % volume;
+            else neighbor_idx = (idx + s3) % volume;
+
+            res += d_bulk[neighbor_idx];
+            load_count++;
+        }
+    }
+    // Final dependent write
+    d_bulk[idx] = res;
+}
+\end{lstlisting}
+
+\bibliography{bibliography}
+\end{document}
+
+\typeout{get arXiv to do 4 passes: Label(s) may have changed. Rerun}

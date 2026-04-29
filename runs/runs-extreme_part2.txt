@@ -1,0 +1,10 @@
+# ====================================================================================
+# EXTREME CONTENTION & OVERLAP TEST SUITE
+# Focus: High Comm/Compute Ratio to see Overlap Speedup
+# Columns: Volume (Global) | Iters | Math_per_Load | Warmup | Repeats | Comm_Mask | Backend
+# ====================================================================================
+
+# 1. High-Comm / Low-Compute (Target: Overlap Speedup)
+# Global Face Size (D0 split): 512*512*2 = 524,288 sites -> 4MB
+# Iters set very low to make compute time comparable to comm time
+(2,256,256,128) 200    1      50     10       (1,1,1,1,1,1,1,1)    NVSHMEM

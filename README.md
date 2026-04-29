@@ -20,7 +20,7 @@ The execution loop is driven by `runs.txt`. The parser uses strict **stream exce
 ### Column Ordering
 `Volume | Iters | Spill | Warmup | Repeats | Comm_Mask | Backend`
 
-* **Tuples:** `Volume` and `Mask` must be wrapped in `()` with **no spaces** (e.g., `(256,256,256,1)`).
+* **Tuples:** `Volume` (Global) and `Mask` must be wrapped in `()` with **no spaces** (e.g., `(256,256,256,1)`).
 * **Backends:** Accepted strings are `MPI`, `NCCL`, or `NVSHMEM`.
 
 **Example:**

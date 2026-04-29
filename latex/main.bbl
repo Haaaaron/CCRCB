@@ -1,0 +1,188 @@
+%apsrev4-2.bst 2019-01-14 (MD) hand-edited version of apsrev4-1.bst
+%Control: key (0)
+%Control: author (8) initials jnrlst
+%Control: editor formatted (1) identically to author
+%Control: production of article title (0) allowed
+%Control: page (0) single
+%Control: year (1) truncated
+%Control: production of eprint (0) enabled
+\begin{thebibliography}{12}%
+\makeatletter
+\providecommand \@ifxundefined [1]{%
+ \@ifx{#1\undefined}
+}%
+\providecommand \@ifnum [1]{%
+ \ifnum #1\expandafter \@firstoftwo
+ \else \expandafter \@secondoftwo
+ \fi
+}%
+\providecommand \@ifx [1]{%
+ \ifx #1\expandafter \@firstoftwo
+ \else \expandafter \@secondoftwo
+ \fi
+}%
+\providecommand \natexlab [1]{#1}%
+\providecommand \enquote  [1]{``#1''}%
+\providecommand \bibnamefont  [1]{#1}%
+\providecommand \bibfnamefont [1]{#1}%
+\providecommand \citenamefont [1]{#1}%
+\providecommand \href@noop [0]{\@secondoftwo}%
+\providecommand \href [0]{\begingroup \@sanitize@url \@href}%
+\providecommand \@href[1]{\@@startlink{#1}\@@href}%
+\providecommand \@@href[1]{\endgroup#1\@@endlink}%
+\providecommand \@sanitize@url [0]{\catcode `\\12\catcode `\$12\catcode
+  `\&12\catcode `\#12\catcode `\^12\catcode `\_12\catcode `\%12\relax}%
+\providecommand \@@startlink[1]{}%
+\providecommand \@@endlink[0]{}%
+\providecommand \url  [0]{\begingroup\@sanitize@url \@url }%
+\providecommand \@url [1]{\endgroup\@href {#1}{\urlprefix }}%
+\providecommand \urlprefix  [0]{URL }%
+\providecommand \Eprint [0]{\href }%
+\providecommand \doibase [0]{https://doi.org/}%
+\providecommand \selectlanguage [0]{\@gobble}%
+\providecommand \bibinfo  [0]{\@secondoftwo}%
+\providecommand \bibfield  [0]{\@secondoftwo}%
+\providecommand \translation [1]{[#1]}%
+\providecommand \BibitemOpen [0]{}%
+\providecommand \bibitemStop [0]{}%
+\providecommand \bibitemNoStop [0]{.\EOS\space}%
+\providecommand \EOS [0]{\spacefactor3000\relax}%
+\providecommand \BibitemShut  [1]{\csname bibitem#1\endcsname}%
+\let\auto@bib@innerbib\@empty
+%</preamble>
+\bibitem [{\citenamefont {Potluri}\ \emph {et~al.}(2013)\citenamefont
+  {Potluri}, \citenamefont {Hamidouche}, \citenamefont {Venkatesh},
+  \citenamefont {Bureddy},\ and\ \citenamefont {Panda}}]{potluri2013mvapich2}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {S.}~\bibnamefont
+  {Potluri}}, \bibinfo {author} {\bibfnamefont {K.}~\bibnamefont {Hamidouche}},
+  \bibinfo {author} {\bibfnamefont {A.}~\bibnamefont {Venkatesh}}, \bibinfo
+  {author} {\bibfnamefont {D.}~\bibnamefont {Bureddy}},\ and\ \bibinfo {author}
+  {\bibfnamefont {D.~K.}\ \bibnamefont {Panda}},\ }\bibfield  {title} {\bibinfo
+  {title} {Efficient inter-node mpi communication using gpudirect rdma for
+  infiniband clusters with nvidia gpus},\ }in\ \href@noop {} {\emph {\bibinfo
+  {booktitle} {2013 42nd International Conference on Parallel Processing}}}\
+  (\bibinfo {organization} {IEEE},\ \bibinfo {year} {2013})\ pp.\ \bibinfo
+  {pages} {80--89}\BibitemShut {NoStop}%
+\bibitem [{\citenamefont {{NVIDIA
+  Corporation}}(2024{\natexlab{a}})}]{nvidia_gpudirect}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibnamefont {{NVIDIA
+  Corporation}}},\ }\href {https://docs.nvidia.com/cuda/gpudirect-rdma/}
+  {\bibinfo {title} {{Developing a Linux Kernel Module using RDMA for
+  GPUDirect}}} (\bibinfo {year} {2024}{\natexlab{a}}),\ \bibinfo {note}
+  {accessed: 2026-04-19}\BibitemShut {NoStop}%
+\bibitem [{\citenamefont {Chu}\ \emph {et~al.}(2020)\citenamefont {Chu} \emph
+  {et~al.}}]{chu2020exploiting}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {C.-H.}\ \bibnamefont
+  {Chu}} \emph {et~al.},\ }\bibfield  {title} {\bibinfo {title} {Exploiting
+  hardware multicast and gpudirect rdma for efficient broadcast},\ }in\
+  \href@noop {} {\emph {\bibinfo {booktitle} {IEEE Transactions on Parallel and
+  Distributed Systems}}}\ (\bibinfo  {publisher} {IEEE},\ \bibinfo {year}
+  {2020})\BibitemShut {NoStop}%
+\bibitem [{\citenamefont {{NVIDIA
+  Corporation}}(2024{\natexlab{b}})}]{nvidia_nccl_doc}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibnamefont {{NVIDIA
+  Corporation}}},\ }\href
+  {https://docs.nvidia.com/deeplearning/nccl/user-guide/docs/} {\bibinfo
+  {title} {{NVIDIA Collective Communication Library (NCCL) Documentation}}}
+  (\bibinfo {year} {2024}{\natexlab{b}}),\ \bibinfo {note} {accessed:
+  2026-04-19}\BibitemShut {NoStop}%
+\bibitem [{\citenamefont {Si}\ \emph {et~al.}(2025)\citenamefont {Si},
+  \citenamefont {Balaji}, \citenamefont {Chen}, \citenamefont {Chu},
+  \citenamefont {Gangidi} \emph {et~al.}}]{meta2025ncclx}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {M.}~\bibnamefont
+  {Si}}, \bibinfo {author} {\bibfnamefont {P.}~\bibnamefont {Balaji}}, \bibinfo
+  {author} {\bibfnamefont {Y.}~\bibnamefont {Chen}}, \bibinfo {author}
+  {\bibfnamefont {C.-H.}\ \bibnamefont {Chu}}, \bibinfo {author} {\bibfnamefont
+  {A.}~\bibnamefont {Gangidi}}, \emph {et~al.},\ }\href@noop {} {\bibinfo
+  {title} {Collective communication for 100k+ gpus}} (\bibinfo {year} {2025}),\
+  \bibinfo {note} {details the exact copy-based pipeline and FIFO staging of
+  baseline NCCL.},\ \Eprint {https://arxiv.org/abs/2510.20171}
+  {arXiv:2510.20171 [cs.DC]} \BibitemShut {NoStop}%
+\bibitem [{\citenamefont {Unat}\ \emph {et~al.}(2024)\citenamefont {Unat},
+  \citenamefont {Turimbetov}, \citenamefont {Issa}, \citenamefont
+  {Sa{\~g}bili}, \citenamefont {Vella}, \citenamefont {De~Sensi},\ and\
+  \citenamefont {Ismayilov}}]{unat2024landscape}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {D.}~\bibnamefont
+  {Unat}}, \bibinfo {author} {\bibfnamefont {I.}~\bibnamefont {Turimbetov}},
+  \bibinfo {author} {\bibfnamefont {M.~K.~T.}\ \bibnamefont {Issa}}, \bibinfo
+  {author} {\bibfnamefont {D.}~\bibnamefont {Sa{\~g}bili}}, \bibinfo {author}
+  {\bibfnamefont {F.}~\bibnamefont {Vella}}, \bibinfo {author} {\bibfnamefont
+  {D.}~\bibnamefont {De~Sensi}},\ and\ \bibinfo {author} {\bibfnamefont
+  {I.}~\bibnamefont {Ismayilov}},\ }\bibfield  {title} {\bibinfo {title} {The
+  landscape of gpu-centric communication},\ }\href@noop {} {\bibfield
+  {journal} {\bibinfo  {journal} {arXiv preprint arXiv:2409.09874}\ } (\bibinfo
+  {year} {2024})}\BibitemShut {NoStop}%
+\bibitem [{\citenamefont {Agrawal}\ \emph {et~al.}(2025)\citenamefont
+  {Agrawal}, \citenamefont {Aga}, \citenamefont {Pati},\ and\ \citenamefont
+  {Islam}}]{agrawal2024optimizing}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {A.}~\bibnamefont
+  {Agrawal}}, \bibinfo {author} {\bibfnamefont {S.}~\bibnamefont {Aga}},
+  \bibinfo {author} {\bibfnamefont {S.}~\bibnamefont {Pati}},\ and\ \bibinfo
+  {author} {\bibfnamefont {M.}~\bibnamefont {Islam}},\ }\bibfield  {title}
+  {\bibinfo {title} {Optimizing ml concurrent computation and communication
+  with gpu dma engines},\ }in\ \href@noop {} {\emph {\bibinfo {booktitle} {IEEE
+  International Symposium on Performance Analysis of Systems and Software
+  (ISPASS)}}}\ (\bibinfo {year} {2025})\ \bibinfo {note} {quantifies HBM and SM
+  contention caused by copy-based collectives versus DMA
+  offloading.}\BibitemShut {Stop}%
+\bibitem [{\citenamefont {{NVIDIA
+  Corporation}}(2024{\natexlab{c}})}]{nvidia_nccl_env}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibnamefont {{NVIDIA
+  Corporation}}},\ }\href
+  {https://docs.nvidia.com/deeplearning/nccl/user-guide/docs/env.html}
+  {\bibinfo {title} {{NCCL Environment Variables}}} (\bibinfo {year}
+  {2024}{\natexlab{c}}),\ \bibinfo {note} {accessed: 2026-04-19}\BibitemShut
+  {NoStop}%
+\bibitem [{\citenamefont {Lee}\ \emph {et~al.}(2025)\citenamefont {Lee},
+  \citenamefont {Oh}, \citenamefont {Kim}, \citenamefont {Go}, \citenamefont
+  {Park},\ and\ \citenamefont {Mahajan}}]{lee2025characterizing}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {S.}~\bibnamefont
+  {Lee}}, \bibinfo {author} {\bibfnamefont {J.}~\bibnamefont {Oh}}, \bibinfo
+  {author} {\bibfnamefont {J.}~\bibnamefont {Kim}}, \bibinfo {author}
+  {\bibfnamefont {S.}~\bibnamefont {Go}}, \bibinfo {author} {\bibfnamefont
+  {J.}~\bibnamefont {Park}},\ and\ \bibinfo {author} {\bibfnamefont
+  {D.}~\bibnamefont {Mahajan}},\ }\href@noop {} {\bibinfo {title}
+  {Characterizing compute-communication overlap in gpu-accelerated distributed
+  deep learning: Performance and power implications}} (\bibinfo {year}
+  {2025})\BibitemShut {NoStop}%
+\bibitem [{\citenamefont {{NVIDIA
+  Corporation}}(2024{\natexlab{d}})}]{nvidia_nvshmem_doc}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibnamefont {{NVIDIA
+  Corporation}}},\ }\href
+  {https://docs.nvidia.com/nvshmem/api/docs/gen/manual.html} {\bibinfo {title}
+  {{NVSHMEM Developer Guide}}} (\bibinfo {year} {2024}{\natexlab{d}}),\
+  \bibinfo {note} {accessed: 2026-04-19}\BibitemShut {NoStop}%
+\bibitem [{\citenamefont {Hwang}\ \emph {et~al.}(2023)\citenamefont {Hwang},
+  \citenamefont {Park}, \citenamefont {Shu}, \citenamefont {Qu}, \citenamefont
+  {Cheng},\ and\ \citenamefont {Xiong}}]{hwang2023ark}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {C.}~\bibnamefont
+  {Hwang}}, \bibinfo {author} {\bibfnamefont {K.}~\bibnamefont {Park}},
+  \bibinfo {author} {\bibfnamefont {R.}~\bibnamefont {Shu}}, \bibinfo {author}
+  {\bibfnamefont {X.}~\bibnamefont {Qu}}, \bibinfo {author} {\bibfnamefont
+  {P.}~\bibnamefont {Cheng}},\ and\ \bibinfo {author} {\bibfnamefont
+  {Y.}~\bibnamefont {Xiong}},\ }\bibfield  {title} {\bibinfo {title} {{ARK}:
+  {GPU-driven} code execution for distributed deep learning},\ }in\ \href@noop
+  {} {\emph {\bibinfo {booktitle} {20th USENIX Symposium on Networked Systems
+  Design and Implementation (NSDI 23)}}}\ (\bibinfo  {publisher} {USENIX
+  Association},\ \bibinfo {year} {2023})\ pp.\ \bibinfo {pages} {87--101},\
+  \bibinfo {note} {analyzes SM cycle consumption during device-initiated
+  communication.}\BibitemShut {Stop}%
+\bibitem [{\citenamefont {{NVIDIA Corporation}}(2022)}]{nvidia_hopper_tma}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibnamefont {{NVIDIA
+  Corporation}}},\ }\href
+  {https://developer.nvidia.com/blog/nvidia-hopper-architecture-in-depth/}
+  {\bibinfo {title} {{NVIDIA Hopper Architecture In-Depth}}} (\bibinfo {year}
+  {2022}),\ \bibinfo {note} {accessed: 2026-04-19}\BibitemShut {NoStop}%
+\end{thebibliography}%

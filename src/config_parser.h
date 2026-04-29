@@ -12,7 +12,7 @@
 struct RunConfig {
   std::vector<size_t> volume;
   int iters;
-  int spill_words;
+  int math_per_load;
   int warmup;
   int repeats;
   std::vector<int> comm_mask;
@@ -102,17 +102,17 @@ inline std::vector<RunConfig> parse_run_file(const std::string &filename,
     ss.exceptions(std::ios::failbit | std::ios::badbit);
 
     std::string vol_str, comm_str, backend_str;
-    int iters, spill, warmup, repeats;
+    int iters = 0, math_per_load = 1, warmup = 0, repeats = 1;
 
     try {
       // Extraction must follow the exact order in runs.txt
-      ss >> vol_str >> iters >> spill >> warmup >> repeats >> comm_str >>
+      ss >> vol_str >> iters >> math_per_load >> warmup >> repeats >> comm_str >>
           backend_str;
 
       RunConfig cfg;
       cfg.volume = parse_tuple<size_t>(vol_str);
       cfg.iters = iters;
-      cfg.spill_words = spill;
+      cfg.math_per_load = math_per_load;
       cfg.warmup = warmup;
       cfg.repeats = repeats;
       cfg.comm_mask = parse_tuple<int>(comm_str);

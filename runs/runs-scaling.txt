@@ -1,0 +1,74 @@
+# ====================================================================================
+# RESOURCE CONTENTION SCALING SUITE
+# Columns: Volume (Global) | Iters | Math_per_Load | Warmup | Repeats | Comm_Mask | Backend
+# ====================================================================================
+
+# ------------------------------------------------------------------------------------
+# 1. VOLUME SCALING
+# Isolates network bandwidth and global memory throughput.
+# Keeps compute (Iters=1000) and register pressure (Spill=128) constant.
+# ------------------------------------------------------------------------------------
+# Small: 128^3 (~16MB per rank)
+(128,128,128,1)   1000   1      100     10       (1,1,1,1,1,1,1,1)    MPI
+(128,128,128,1)   1000   1      100     10       (1,1,1,1,1,1,1,1)    NCCL
+(128,128,128,1)   1000   1      100     10       (1,1,1,1,1,1,1,1)    NVSHMEM
+
+# Medium: 256^3 (~134MB per rank) - YOUR BASELINE
+(256,256,256,1)   1000   1      100     10       (1,1,1,1,1,1,1,1)    MPI
+(256,256,256,1)   1000   1      100     10       (1,1,1,1,1,1,1,1)    NCCL
+(256,256,256,1)   1000   1      100     10       (1,1,1,1,1,1,1,1)    NVSHMEM
+
+# Large: 512x256x256 (~268MB per rank)
+(512,256,256,1)   1000   1      100     10       (1,1,1,1,1,1,1,1)    MPI
+(512,256,256,1)   1000   1      100     10       (1,1,1,1,1,1,1,1)    NCCL
+(512,256,256,1)   1000   1      100     10       (1,1,1,1,1,1,1,1)    NVSHMEM
+
+# Extra Large: 512x512x256 (~536MB per rank)
+(512,512,256,1)   1000   1      100     10       (1,1,1,1,1,1,1,1)    MPI
+(512,512,256,1)   1000   1      100     10       (1,1,1,1,1,1,1,1)    NCCL
+(512,512,256,1)   1000   1      100     10       (1,1,1,1,1,1,1,1)    NVSHMEM
+
+
+# ------------------------------------------------------------------------------------
+# 2. COMPUTE INTENSITY SCALING (MATH_I)
+# Isolates SM overlap capabilities. How well do the comm kernels run in the
+# background when the compute kernel takes longer to finish?
+# Keeps Volume (256^3) and Spill (128) constant.
+# ------------------------------------------------------------------------------------
+# Low Intensity (Math_I = 1)
+(256,256,256,1)   1000   1      100     10       (1,1,1,1,1,1,1,1)    MPI
+(256,256,256,1)   1000   1      100     10       (1,1,1,1,1,1,1,1)    NCCL
+(256,256,256,1)   1000   1      100     10       (1,1,1,1,1,1,1,1)    NVSHMEM
+
+# High Intensity (Math_I = 10)
+(256,256,256,1)   1000   10      100     10       (1,1,1,1,1,1,1,1)    MPI
+(256,256,256,1)   1000   10      100     10       (1,1,1,1,1,1,1,1)    NCCL
+(256,256,256,1)   1000   10      100     10       (1,1,1,1,1,1,1,1)    NVSHMEM
+
+# Extreme Intensity (Math_I = 50)
+(256,256,256,1)   1000   50      100     10       (1,1,1,1,1,1,1,1)    MPI
+(256,256,256,1)   1000   50      100     10       (1,1,1,1,1,1,1,1)    NCCL
+(256,256,256,1)   1000   50      100     10       (1,1,1,1,1,1,1,1)    NVSHMEM
+
+
+# ------------------------------------------------------------------------------------
+# 3. MEMORY / REGISTER PRESSURE SCALING (SPILL)
+# Forces the compute kernel to thrash the L1/L2 caches and use local memory.
+# This tests if the communication kernels (especially NVSHMEM/NCCL) get starved
+# for memory bandwidth when the SMs are working hard.
+# Keeps Volume (256^3) and Iters (1000) constant.
+# ------------------------------------------------------------------------------------
+# Zero Spill (Compute stays mostly in registers / very fast)
+(256,256,256,1)   1000   1      100     10       (1,1,1,1,1,1,1,1)    MPI
+(256,256,256,1)   1000   1      100     10       (1,1,1,1,1,1,1,1)    NCCL
+(256,256,256,1)   1000   1      100     10       (1,1,1,1,1,1,1,1)    NVSHMEM
+
+# Low Spill (64 Words)
+(256,256,256,1)   1000   1      100     10       (1,1,1,1,1,1,1,1)    MPI
+(256,256,256,1)   1000   1      100     10       (1,1,1,1,1,1,1,1)    NCCL
+(256,256,256,1)   1000   1      100     10       (1,1,1,1,1,1,1,1)    NVSHMEM
+
+# Extreme Spill (512 Words - Will cause heavy L2 cache contention)
+(256,256,256,1)   1000   1      100     10       (1,1,1,1,1,1,1,1)    MPI
+(256,256,256,1)   1000   1      100     10       (1,1,1,1,1,1,1,1)    NCCL
+(256,256,256,1)   1000   1      100     10       (1,1,1,1,1,1,1,1)    NVSHMEM
